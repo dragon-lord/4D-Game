@@ -4,6 +4,13 @@
 #include<stdio.h>
 #include<math.h>
 
+struct Vec4{
+	float w;
+	float x;
+	float y;
+	float z;
+};
+
 struct Vec3{
 	float x;
 	float y;
@@ -24,6 +31,18 @@ struct Line{
 	float m;
 	float b;
 };
+
+struct Vec4 Vec4_newn(float w,float x,float y,float z);
+struct Vec4 Vec4_newv(float a[4],float b[4]);
+struct Vec4 Vec4_addn(struct Vec4 vec,float num);
+struct Vec4 Vec4_addv(struct Vec4 a,struct Vec4 b);
+struct Vec4 Vec4_subn(struct Vec4 vec,float num);
+struct Vec4 Vec4_subv(struct Vec4 a,struct Vec4 b);
+struct Vec4 Vec4_muln(struct Vec4 vec,float num);
+struct Vec4 Vec4_mulv(struct Vec4 a,struct Vec4 b);
+struct Vec4 Vec4_divn(struct Vec4 vec,float num);
+struct Vec4 Vec4_divv(struct Vec4 a,struct Vec4 b);
+struct Vec4 Vec4_neg(struct Vec4 vec);
 
 struct Vec3 Vec3_newn(float x,float y,float z);
 struct Vec3 Vec3_newv(float a[3],float b[3]);
@@ -62,13 +81,25 @@ struct Complex Complex_div(struct Complex a,struct Complex b);
 float Vec2_length(struct Vec2 vec);
 struct Vec2 Vec2_perp(struct Vec2 vec);
 struct Vec2 Vec2_norm(struct Vec2 vec);
+struct Vec2 Vec2_rot(struct Vec2 a,float theata);
 
 float Vec3_length(struct Vec3 vec);
 float Vec3_dot(struct Vec3 a,struct Vec3 b);
 float Vec3_angle(struct Vec3 a,struct Vec3 b);
 struct Vec3 Vec3_norm(struct Vec3 vec);
+struct Vec3 Vec3_ortho(struct Vec3 a,struct Vec3 b);
+struct Vec3 Vec3_ortho2(struct Vec3 a,struct Vec3 b);
 struct Vec3 Vec3_cross(struct Vec3 a,struct Vec3 b);
-struct Vec3 Vec3_rot(struct Vec3 a,struct Vec3 b,float theta);
+struct Vec3 Vec3_rot(struct Vec3 a,struct Vec3 b,struct Vec3 c,float theata);
+
+float Vec4_length(struct Vec4 vec);
+float Vec4_dot(struct Vec4 a,struct Vec4 b);
+float Vec4_angle(struct Vec4 a,struct Vec4 b);
+struct Vec4 Vec4_norm(struct Vec4 vec);
+struct Vec4 Vec4_ortho(struct Vec4 a,struct Vec4 b,struct Vec4 c);
+struct Vec4 Vec4_ortho2(struct Vec4 a,struct Vec4 b);
+struct Vec4 Vec4_ortho3(struct Vec4 a,struct Vec4 b,struct Vec4 c);
+struct Vec4 Vec4_rot(struct Vec4 a,struct Vec4 b,struct Vec4 c,float theata);
 
 void printarr(FILE *arr,int width,int height,int depth);
 void printarr2(FILE *arr,int width,int height);
@@ -77,14 +108,49 @@ struct Vec2 *convexHull(struct Vec2 points[],int n);
 
 //IMPLIMENT
 
-struct Vec3 intersection(struct Vec3 norm,struct Vec3 zero,struct Vec3 vec,struct Vec3 pos){
-	float d=Vec3_dot(norm,zero);
+struct Vec3 intersection3(struct Vec3 norm,struct Vec3 zero,struct Vec3 vec,struct Vec3 pos){
+	//float d=Vec3_dot(norm,zero);
 	//vec=Vec3_subv(vec,pos);
-	struct Vec3 temp=Vec3_mulv(pos,norm);
+	//struct Vec3 temp=Vec3_mulv(pos,norm);
+	//d=d-Vec3_dot(pos,norm);//(temp.x+temp.y+temp.z);
+	//temp=Vec3_mulv(vec,norm);
+	//d=d/Vec3_dot(vec,norm);//(temp.x+temp.y+temp.z);
+	return Vec3_addv(Vec3_muln(vec,(Vec3_dot(norm,zero)-Vec3_dot(pos,norm))/Vec3_dot(vec,norm)),pos);
+}
+
+struct Vec4 intersection4(struct Vec4 norm,struct Vec4 zero,struct Vec4 vec,struct Vec4 pos){
+	/*float d=Vec4_dot(norm,zero);
+	//vec=Vec3_subv(vec,pos);
+	struct Vec4 temp=Vec4_mulv(pos,norm);
 	d=d-(temp.x+temp.y+temp.z);
-	temp=Vec3_mulv(vec,norm);
+	temp=Vec4_mulv(vec,norm);
 	d=d/(temp.x+temp.y+temp.z);
-	return Vec3_addv(Vec3_muln(vec,d),pos);
+	return Vec4_addv(Vec4_muln(vec,d),pos);//*/
+return Vec4_addv(Vec4_muln(vec,(Vec4_dot(norm,zero)-Vec4_dot(pos,norm))/Vec4_dot(vec,norm)),pos);
+}//*/
+
+float Vec4_det(struct Vec4 i,struct Vec4 j,struct Vec4 k,struct Vec4 l){
+	float w1=i.w;float w2=j.w;float w3=k.w;float w4=l.w;
+	float x1=i.x;float x2=j.x;float x3=k.x;float x4=l.x;
+	float y1=i.y;float y2=j.y;float y3=k.y;float y4=l.y;
+	float z1=i.z;float z2=j.z;float z3=k.z;float z4=l.z;
+	float r=w1*(x2*(y3*z4-y4*z3)-x3*(y2*z4-y4*z2)+x4*(y2*z3-y3*z2))-w2*(x1*(y3*z4-y4*z3)-x3*(y1*z4-y4*z1)+x4*(y1*z3-y3*z1))+w3*(x1*(y2*z4-y4*z2)-x2*(y1*z4-y4*z1)+x4*(y1*z2-y2*z1))-w4*(x1*(y2*z3-y3*z2)-x2*(y1*z3-y3*z1)+x3*(y1*z2-y2*z1));
+	return r;
+}
+
+float Vec3_det(struct Vec3 i,struct Vec3 j,struct Vec3 k){
+	float x1=i.x;float x2=j.x;float x3=k.x;
+	float y1=i.y;float y2=j.y;float y3=k.y;
+	float z1=i.z;float z2=j.z;float z3=k.z;
+	float r=x1*(y2*z3-y3*z2)-x2*(y1*z3-y3*z1)+x3*(y1*z2-y2*z1);
+	return r;
+}
+
+int Vec4_equal(struct Vec4 a,struct Vec4 b){
+	if(a.w==b.w && a.x==b.x && a.y==b.y && a.z==b.z){
+		return 1;
+	}
+	return 0;
 }
 
 int Vec3_equal(struct Vec3 a,struct Vec3 b){
@@ -99,6 +165,96 @@ int Vec2_equal(struct Vec2 a,struct Vec2 b){
 		return 1;
 	}
 	return 0;
+}
+
+struct Vec4 Vec4_newn(float w,float x,float y,float z){
+	struct Vec4 vec;
+	vec.w=w;
+	vec.x=x;
+	vec.y=y;
+	vec.z=z;
+	return vec;
+}
+
+struct Vec4 Vec4_newv(float a[4],float b[4]){
+	struct Vec4 vec;
+	vec.w=a[0]-b[0];
+	vec.x=a[1]-b[1];
+	vec.y=a[2]-b[2];
+	vec.z=a[3]-b[3];
+	return vec;
+}
+
+struct Vec4 Vec4_addn(struct Vec4 vec,float num){
+	vec.w+=num;
+	vec.x+=num;
+	vec.y+=num;
+	vec.z+=num;
+	return vec;
+}
+
+struct Vec4 Vec4_addv(struct Vec4 a,struct Vec4 b){
+	a.w+=b.w;
+	a.x+=b.x;
+	a.y+=b.y;
+	a.z+=b.z;
+	return a;
+}
+
+struct Vec4 Vec4_subn(struct Vec4 vec,float num){
+	vec.w-=num;
+	vec.x-=num;
+	vec.y-=num;
+	vec.z-=num;
+	return vec;
+}
+
+struct Vec4 Vec4_subv(struct Vec4 a,struct Vec4 b){
+	a.w-=b.w;
+	a.x-=b.x;
+	a.y-=b.y;
+	a.z-=b.z;
+	return a;
+}
+
+struct Vec4 Vec4_muln(struct Vec4 vec,float num){
+	vec.w*=num;
+	vec.x*=num;
+	vec.y*=num;
+	vec.z*=num;
+	return vec;
+}
+
+struct Vec4 Vec4_mulv(struct Vec4 a,struct Vec4 b){
+	a.w*=b.w;
+	a.x*=b.x;
+	a.y*=b.y;
+	a.z*=b.z;
+	return a;
+}
+
+struct Vec4 Vec4_divn(struct Vec4 vec,float num){
+	vec.w/=num;
+	vec.x/=num;
+	vec.y/=num;
+	vec.z/=num;
+	return vec;
+}
+
+struct Vec4 Vec4_divv(struct Vec4 a,struct Vec4 b){
+	a.w/=b.w;
+	a.x/=b.x;
+	a.y/=b.y;
+	a.z/=b.z;
+	return a;
+}
+
+struct Vec4 Vec4_neg(struct Vec4 vec){
+	vec.w=1-vec.w;
+	vec.x=1-vec.x;
+	vec.y=1-vec.y;
+	vec.z=1-vec.z;
+	return vec;
 }
 
 struct Vec3 Vec3_newn(float x,float y,float z){
@@ -330,6 +486,11 @@ struct Vec2 Vec2_norm(struct Vec2 vec){
 	return(vec);
 }
 
+struct Vec2 Vec2_rot(struct Vec2 a,float theata){
+	a=Vec2_newn(a.x*cos(theata)-a.y*sin(theata),a.x*sin(theata)+a.y*cos(theata));
+	return a;
+}
+
 float Vec3_length(struct Vec3 vec){
 	return(sqrt(vec.x*vec.x+vec.y*vec.y+vec.z*vec.z));
 }
@@ -347,6 +508,47 @@ struct Vec3 Vec3_norm(struct Vec3 vec){
 	return(vec);
 }
 
+struct Vec3 Vec3_ortho(struct Vec3 a,struct Vec3 b){
+	a=Vec3_norm(a);
+	b=Vec3_norm(b);
+	struct Vec3 c;
+	c=Vec3_newn(1,0,0);
+	if(Vec3_det(a,b,c)==0){
+		c=Vec3_newn(0,1,0);
+		if(Vec3_det(a,b,c)==0){
+			c=Vec3_newn(0,0,1);
+			if(Vec3_det(a,b,c)<0)
+				c=Vec3_newn(0,0,-1);
+		}else if(Vec3_det(a,b,c)<0){
+			c=Vec3_newn(0,-1,0);
+		}
+	}else if(Vec3_det(a,b,c)<0){
+		c=Vec3_newn(-1,0,0);
+	}
+	//printf("(%f,%f,%f,%f)\n",d.w,d.x,d.y,d.z);
+	c=Vec3_subv(c,Vec3_addv(Vec3_muln(a,Vec3_dot(c,a)),Vec3_muln(b,Vec3_dot(c,b))));
+	return c;
+}
+
+struct Vec3 Vec3_ortho2(struct Vec3 a,struct Vec3 b){
+	if(Vec3_equal(a,b)==1)
+		return Vec3_newn(0,0,0);
+	a=Vec3_norm(a);
+	b=Vec3_norm(b);
+	a=Vec3_subv(a,Vec3_muln(b,Vec3_dot(a,b)));
+	return a;
+}
+
+struct Vec3 Vec3_ortho3(struct Vec3 a,struct Vec3 b,struct Vec3 c){
+	if(Vec3_equal(a,b)==1 || Vec3_equal(a,c)==1 || Vec3_equal(b,c)==1)
+		return Vec3_newn(0,0,0);
+	a=Vec3_norm(a);
+	b=Vec3_norm(b);
+	c=Vec3_norm(c);
+	a=Vec3_subv(a,Vec3_addv(Vec3_muln(b,Vec3_dot(a,b)),Vec3_muln(c,Vec3_dot(a,c))));
+	return a;
+}
+
 struct Vec3 Vec3_cross(struct Vec3 a,struct Vec3 b){
 	struct Vec3 c;
 	c.x=a.y*b.z-a.z*b.y;
@@ -355,14 +557,106 @@ struct Vec3 Vec3_cross(struct Vec3 a,struct Vec3 b){
 	return(c);
 }
 
-struct Vec3 Vec3_rot(struct Vec3 a,struct Vec3 b,float theta){
+struct Vec3 Vec3_rot(struct Vec3 a,struct Vec3 b,struct Vec3 c,float theata){
+	b=Vec3_ortho2(b,c);
+	if(Vec3_equal(b,Vec3_newn(0,0,0))==1 || theata==0)
+		return a;
+	b=Vec3_norm(b);
+	c=Vec3_norm(c);
+
+	struct Vec2 vec=Vec2_newn(Vec3_dot(a,b),Vec3_dot(a,c));
+	a=Vec3_ortho3(a,b,c);
+	vec=Vec2_rot(vec,theata);
+	a=Vec3_addv(Vec3_addv(a,Vec3_muln(b,vec.x)),Vec3_muln(c,vec.y));//*/
+
+	return a;
+	/*/
 	struct Vec3 c;
-	float cs=cos(theta);
-	float sn=sin(theta);
+	float cs=cos(theata);
+	float sn=sin(theata);
 	c.x=a.x*(cs+(b.x*b.x)*(1-cs))+a.y*(b.x*b.y*(1-cs)-b.z*sn)+a.z*(b.x*b.z*(1-cs)+b.y*sn);
 	c.y=a.x*(b.y*b.x*(1-cs)+b.z*sn)+a.y*(cs+(b.y*b.y)*(1-cs))+a.z*(b.y*b.z*(1-cs)-b.x*sn);
 	c.z=a.x*(b.z*b.x*(1-cs)-b.y*sn)+a.y*(b.z*b.y*(1-cs)+b.x*sn)+a.z*(cs+(b.z*b.z)*(1-cs));
-	return(c);
+	return(c);//*/
+}
+
+float Vec4_length(struct Vec4 vec){
+	return(sqrt(vec.w*vec.w+vec.x*vec.x+vec.y*vec.y+vec.z*vec.z));
+}
+
+float Vec4_dot(struct Vec4 a,struct Vec4 b){
+	return(a.w*b.w+a.x*b.x+a.y*b.y+a.z*b.z);
+}
+
+float Vec4_angle(struct Vec4 a,struct Vec4 b){
+	return(acos(Vec4_dot(a,b)/(Vec4_length(a)*Vec4_length(b))));
+}
+
+struct Vec4 Vec4_norm(struct Vec4 vec){
+	vec=Vec4_divn(vec,Vec4_length(vec));
+	return(vec);
+}
+
+struct Vec4 Vec4_ortho(struct Vec4 a,struct Vec4 b,struct Vec4 c){
+	a=Vec4_norm(a);
+	b=Vec4_norm(b);
+	c=Vec4_norm(c);
+	struct Vec4 d;
+	d=Vec4_newn(1,0,0,0);
+	if(Vec4_det(a,b,c,d)==0){
+		d=Vec4_newn(0,1,0,0);
+		if(Vec4_det(a,b,c,d)==0){
+			d=Vec4_newn(0,0,1,0);
+			if(Vec4_det(a,b,c,d)==0){
+				d=Vec4_newn(0,0,0,1);
+				if(Vec4_det(a,b,c,d)<0)
+					d=Vec4_newn(0,0,0,-1);
+			}else if(Vec4_det(a,b,c,d)<0){
+				d=Vec4_newn(0,0,-1,0);
+			}
+		}else if(Vec4_det(a,b,c,d)<0){
+			d=Vec4_newn(0,-1,0,0);
+		}
+	}else if(Vec4_det(a,b,c,d)<0){
+		d=Vec4_newn(-1,0,0,0);
+	}
+	//printf("(%f,%f,%f,%f)\n",d.w,d.x,d.y,d.z);
+	d=Vec4_subv(d,Vec4_addv(Vec4_addv(Vec4_muln(a,Vec4_dot(d,a)),Vec4_muln(b,Vec4_dot(d,b))),Vec4_muln(c,Vec4_dot(d,c))));
+	return d;
+}
+
+struct Vec4 Vec4_ortho2(struct Vec4 a,struct Vec4 b){
+	if(Vec4_equal(a,b)==1)
+		return Vec4_newn(0,0,0,0);
+	a=Vec4_norm(a);
+	b=Vec4_norm(b);
+	a=Vec4_subv(a,Vec4_muln(b,Vec4_dot(a,b)));
+	return a;
+}
+
+struct Vec4 Vec4_ortho3(struct Vec4 a,struct Vec4 b,struct Vec4 c){
+	if(Vec4_equal(a,b)==1 || Vec4_equal(a,c)==1 || Vec4_equal(b,c)==1)
+		return Vec4_newn(0,0,0,0);
+	a=Vec4_norm(a);
+	b=Vec4_norm(b);
+	c=Vec4_norm(c);
+	a=Vec4_subv(a,Vec4_addv(Vec4_muln(b,Vec4_dot(a,b)),Vec4_muln(c,Vec4_dot(a,c))));
+	return a;
+}
+
+struct Vec4 Vec4_rot(struct Vec4 a,struct Vec4 b,struct Vec4 c,float theata){
+	b=Vec4_ortho2(b,c);
+	if(Vec4_equal(b,Vec4_newn(0,0,0,0))==1 || theata==0)
+		return a;
+	b=Vec4_norm(b);
+	c=Vec4_norm(c);
+
+	struct Vec2 vec=Vec2_newn(Vec4_dot(a,b),Vec4_dot(a,c));
+	a=Vec4_ortho3(a,b,c);
+	vec=Vec2_rot(vec,theata);
+	a=Vec4_addv(Vec4_addv(a,Vec4_muln(b,vec.x)),Vec4_muln(c,vec.y));//*/
+
+	return a;
 }
 
 void printarr(FILE *arr,int width,int height,int depth){

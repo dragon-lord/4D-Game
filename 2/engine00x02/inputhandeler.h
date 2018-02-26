@@ -24,6 +24,7 @@ int Input_init(){
 }
 
 struct Cam Input_update(struct Cam cam){
+	struct Vec3 vec=/*cam.fwd;/*/Vec3_norm(Vec3_cross(cam.rght,cam.up));//*/
 
 	/*if(input[0]==1){
 		cam.z+=1;
@@ -50,9 +51,9 @@ struct Cam Input_update(struct Cam cam){
 		input[5]=0;
 	}/*/
 	if(input[0]==1){
-		cam.x+=cam.fwd.x/10;
-		cam.y+=cam.fwd.y/10;
-		cam.z+=cam.fwd.z/10;
+		cam.x+=vec.x/10;
+		cam.y+=vec.y/10;
+		cam.z+=vec.z/10;
 	}
 	if(input[1]==1){
 		cam.x-=cam.rght.x/10;
@@ -60,9 +61,9 @@ struct Cam Input_update(struct Cam cam){
 		cam.z-=cam.rght.z/10;
 	}
 	if(input[2]==1){
-		cam.x-=cam.fwd.x/10;
-		cam.y-=cam.fwd.y/10;
-		cam.z-=cam.fwd.z/10;
+		cam.x-=vec.x/10;
+		cam.y-=vec.y/10;
+		cam.z-=vec.z/10;
 	}
 	if(input[3]==1){
 		cam.x+=cam.rght.x/10;
@@ -83,30 +84,30 @@ struct Cam Input_update(struct Cam cam){
 		//printf("(%f,%f)\n",mouse[0],mouse[1]);
 		if(mouse[1]<0){
 			if(Vec3_angle(cam.fwd,cam.up)<M_PI/8){}else{
-				cam.fwd=Vec3_rot(cam.fwd,cam.rght,mouse[1]/-50);}
+				cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.up,mouse[1]/-50);}
 		}else{
 			if(Vec3_angle(cam.fwd,cam.up)>7*M_PI/8){}else{
-				cam.fwd=Vec3_rot(cam.fwd,cam.rght,mouse[1]/-50);}
+				cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.up,mouse[1]/-50);}
 		}
-		cam.fwd=Vec3_rot(cam.fwd,cam.up,mouse[0]/-50);
+		cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.rght,mouse[0]/-50);
 		cam.rght=Vec3_cross(cam.fwd,cam.up);
 		mouse[0]=0;
 		mouse[1]=0;
 	}
 	if(input[6]==1){
 		if(Vec3_angle(cam.fwd,cam.up)<M_PI/8){}else{
-			cam.fwd=Vec3_rot(cam.fwd,cam.rght,0.05);}
+			cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.up,0.05);}
 	}
 	if(input[7]==1){
 		if(Vec3_angle(cam.fwd,cam.up)>7*M_PI/8){}else{
-			cam.fwd=Vec3_rot(cam.fwd,cam.rght,-0.05);}
+			cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.up,-0.05);}
 	}
 	if(input[8]==1){
-		cam.fwd=Vec3_rot(cam.fwd,cam.up,0.05);
+		cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.rght,0.05);
 		cam.rght=Vec3_cross(cam.fwd,cam.up);
 	}
 	if(input[9]==1){
-		cam.fwd=Vec3_rot(cam.fwd,cam.up,-0.05);
+		cam.fwd=Vec3_rot(cam.fwd,cam.fwd,cam.rght,-0.05);
 		cam.rght=Vec3_cross(cam.fwd,cam.up);
 	}
 	if(input[10]==1){

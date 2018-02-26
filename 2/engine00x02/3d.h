@@ -181,7 +181,7 @@ void Draw_crossCube(struct Cam cam,float pnt[3],Uint32 color){
 		struct Vec3 p0=Vec3_newn(POINTS[temp0][0],POINTS[temp0][1],POINTS[temp0][2]);
 		struct Vec3 p1=Vec3_newn(POINTS[temp1][0],POINTS[temp1][1],POINTS[temp1][2]);
 		//struct Vec3 pp=Vec3_addv(Vec3_subv(intersection(cam.fwd,Vec3_newn(cam.x,cam.y,cam.z),Vec3_subv(p0,p1),p0),Vec3_newn(cam.x,cam.y,cam.z)),Vec3_newn(pnt[0],pnt[1],pnt[2]));
-		struct Vec3 pp=intersection(cam.fwd,zed,Vec3_subv(p0,p1),p0);
+		struct Vec3 pp=intersection3(cam.fwd,zed,Vec3_subv(p0,p1),p0);
 		points[i]=Vec2_newn((width/2)+((Vec3_dot(pp,cam.rght)-Vec3_dot(zed,cam.rght))*100),(height/2)-((Vec3_dot(pp,up)-Vec3_dot(zed,up))*100));
 		//printf("(%f,%f)\n",Vec3_dot(pp,cam.rght),Vec3_dot(pp,up));
 		//printf("p0:(%f,%f,%f)\n p1:(%f,%f,%f)\n",p0.x,p0.y,p0.z,p1.x,p1.y,p1.z);
