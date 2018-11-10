@@ -160,9 +160,9 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
 			p[i]=-1;
 		}
 		pntz[i]=Vec4_subv(pnt[i],cam.pos);
-		printf("%i:(%f,%f):%i\n",i,d,r,p[i]);
+		//printf("%i:(%f,%f):%i\n",i,d,r,p[i]);
 	}
-	printf(" %i,%i\n",pos,neg);
+	//printf(" %i,%i\n",pos,neg);
 	if(pos==8)
 		return;
 	if(neg==8)
@@ -176,20 +176,29 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
 	if(on<8){
 		for(int i=0;i<12;i++){
 			//printf("%f:%f,%f\n",d,r1,r2);
+
+			/*struct Vec4 vec=Vec4_norm(Vec4_subv(pnt[WALL4[i][0]],pnt[WALL4[i][1]]));
+			float T=(d-Vec4_dot(cam.ana,pnt[WALL4[i][0]]))/Vec4_dot(vec,cam.ana);
+			vec=Vec4_addv(pntz[WALL4[i][0]],Vec4_muln(vec,T));
+			struct Vec3 vec3=Vec3_new(Vec4_dot(vec,cam.rght),Vec4_dot(vec,up),Vec4_dot(vec,cam.fwd));
+			if(vec3.z>1){
+				Fill_point(D3(Cam3_zero(),vec3),100<<8,50/vec3.z);
+			}//*/
+
 			if(p[WALL4[i][0]]==1 && p[WALL4[i][1]]==-1 || p[WALL4[i][0]]==-1 && p[WALL4[i][1]]==1){
 				if(nodes<4){
 					if(test1[nodes]==i || test2[nodes]==i)
 						test++;
 				}
-				printf("  %i\n",i);
-				struct Vec4 vec=Vec4_norm(Vec4_subv(pntz[WALL4[i][0]],pntz[WALL4[i][1]]));
-				float T=(d-Vec4_dot(cam.ana,pntz[WALL4[i][0]]))/Vec4_dot(vec,cam.ana);
+				//printf("  %i\n",i);
+				struct Vec4 vec=Vec4_norm(Vec4_subv(pnt[WALL4[i][0]],pnt[WALL4[i][1]]));
+				float T=(d-Vec4_dot(cam.ana,pnt[WALL4[i][0]]))/Vec4_dot(vec,cam.ana);
 				vec=Vec4_addv(pntz[WALL4[i][0]],Vec4_muln(vec,T));
 				pnts[nodes++]=Vec3_new(Vec4_dot(vec,cam.rght),Vec4_dot(vec,up),Vec4_dot(vec,cam.fwd));//*/
 			}
 		}
 	}
-	printf("   %i,%i\n",nodes,test);
+	//printf("   %i,%i\n",nodes,test);
 	if(nodes<=1)
 		return;
 	if(nodes<=4){
@@ -203,11 +212,9 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
 					j=0;
 				}
 			}
-			if(Vec3_dot(Vec3_new(0,0,1),pnts[j])>1){
-				pnts2[i]=D3(Cam3_zero(),pnts[j]);
-				Fill_point(pnts2[i],i*100,(int)(50/Vec3_dot(Vec3_new(0,0,1),pnts[j])));
-			}else{
-				nodes--;
+			pnts2[i]=D3(Cam3_zero(),pnts[j]);
+			if(pnts[j].z>1){
+				Fill_point(pnts2[i],i*63,(int)(50/pnts[j].z));
 			}
 		}
 		Fill_poly(pnts2,0,nodes);
