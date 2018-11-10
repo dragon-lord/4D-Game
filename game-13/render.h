@@ -188,9 +188,9 @@ void Fill_point(struct Vec2 point,Uint32 color,int s){
   for(int i=-s;i<s;i++){
     int c=(int)sqrt(s*s-i*i);
     for(int j=-c;j<c;j++){
-      int y=(int)(height-(point.y+j));
-      int x=(int)(point.x+i);
-      if(x<width && x>0 && y<height && y>0)
+      int y=(int)(height-(point.y+i));
+      int x=(int)(point.x+j);
+      if(x<width && x>=0 && y<height && y>=0)
         pixels[(int)(width*y+x)]=color;
     }
   }

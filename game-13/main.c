@@ -17,9 +17,10 @@ void game(float fps){
   //Fill_poly(poly,0,4);
   //printf("%f\n",fps);
   Draw_wall4(cam,poly,0);
-  Draw_wall4(cam,poly1,0);
+  //Draw_wall4(cam,poly1,0);
   for(int i=0;i<8;i++){
-    Fill_point(D4(cam,poly[i]),0,10);
+    struct Vec3 vec=D4(cam,poly[i]);
+    Fill_point(Vec2_new(vec.x,vec.y),0,10);
   }
   //printf("(%f,%f,%f,%f)\n",cam.ana.w,cam.ana.x,cam.ana.y,cam.ana.z);
   //Fill_point(Vec2_new(1,0),0);

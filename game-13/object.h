@@ -96,12 +96,12 @@ void Cam3_update(struct Cam3 *cam){
     cam->fwd=Vec3_rot(-0.02,cam->fwd,cam->fwd,cam->rght);
   }if(key[82]==1){
     //printf("1\n");
-    if(Vec3_angle(cam->fwd,cam->up)<=2.8)
-      cam->fwd=Vec3_rot(-0.02,cam->fwd,cam->fwd,cam->up);
-  }if(key[81]==1){
-    //printf("2\n");
     if(Vec3_angle(cam->fwd,cam->up)>=0.5)
       cam->fwd=Vec3_rot(0.02,cam->fwd,cam->fwd,cam->up);
+  }if(key[81]==1){
+    //printf("2\n");
+    if(Vec3_angle(cam->fwd,cam->up)<=2.8)
+      cam->fwd=Vec3_rot(-0.02,cam->fwd,cam->fwd,cam->up);
   }
   //printf("%f\n",Vec3_angle(cam->fwd,cam->up));
   cam->up=Vec3_norm(cam->up);
@@ -132,11 +132,11 @@ void Cam4_update(struct Cam4 *cam){
   }if(key['u']==1){
     cam->fwd=Vec4_rot(-0.02,cam->fwd,cam->fwd,cam->ana);
   }if(key['i']==1){
-    if(Vec4_angle(cam->fwd,cam->up)<=2.8)
-      cam->fwd=Vec4_rot(-0.02,cam->fwd,cam->fwd,cam->up);
-  }if(key['k']==1){
     if(Vec4_angle(cam->fwd,cam->up)>=0.5)
       cam->fwd=Vec4_rot(0.02,cam->fwd,cam->fwd,cam->up);
+  }if(key['k']==1){
+    if(Vec4_angle(cam->fwd,cam->up)<=2.8)
+      cam->fwd=Vec4_rot(-0.02,cam->fwd,cam->fwd,cam->up);
   }
   cam->up=Vec4_norm(cam->up);
   cam->fwd=Vec4_norm(cam->fwd);
