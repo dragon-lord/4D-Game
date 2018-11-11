@@ -5,8 +5,15 @@
 #include<stdlib.h>
 
 #include<SDL2/SDL.h>
+#include<SDL2/SDL_image.h>
 
 #include "../math.h"
+
+struct Texture{
+  Uint32 *pixels;
+  int w;
+  int h;
+};
 
 SDL_Renderer *render=NULL;
 SDL_Texture *screen=NULL;
@@ -25,6 +32,7 @@ int quit=0;
 #include "inputhandeler.h"
 
 int Render_init(char *title,int w,int h);
+struct Texture Load_image(char *path);
 void Render_update(void(*update)(float));
 void Render_poly(float pnts[],Uint32 color,int n);
 void Fill_poly(struct Vec2 poly[],Uint32 color,int n);
@@ -35,8 +43,15 @@ void Render_destroy();
 
 int Render_init(char *title,int w,int h){
   width=w;height=h;
-  SDL_Init(SDL_INIT_VIDEO);
-  window=SDL_CreateWindow("Game",
+  if(SDL_Init(SDL_INIT_VIDEO)<0){
+    fprintf(stderr,"ERR SDL_Init: %s\n",SDL_GetError());
+    return 0;
+  }
+  if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)){
+    fprintf(stderr,"ERR IMG_Init: %s\n",IMG_GetError());
+    return 0;
+  }
+  window=SDL_CreateWindow(title,
     SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_RESIZABLE);
   render=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
   screen=SDL_CreateTexture(render,
@@ -44,6 +59,23 @@ int Render_init(char *title,int w,int h){
   pixels=malloc(width*height*sizeof(Uint32));
   memset(pixels,100,width*height*sizeof(Uint32));
   return 1;
+}
+
+struct Texture Load_image(char *path){
+  SDL_Surface* img=IMG_Load(path);
+  struct Texture image;
+  if(img==NULL){
+    fprintf(stderr,"ERR IMG_Load: %s\n",IMG_GetError());
+    image.pixels=NULL;
+    return image;
+  }
+  img=SDL_ConvertSurfaceFormat(img,SDL_PIXELFORMAT_ARGB8888,0);
+  image.w=img->w;
+  image.h=img->h;
+  image.pixels=malloc(img->w*img->h*sizeof(Uint32));
+  memcpy(image.pixels,(Uint32*)img->pixels,img->w*img->h*sizeof(Uint32));
+  SDL_FreeSurface(img);
+  return image;
 }
 
 void Render_update(void(*update)(float)){
