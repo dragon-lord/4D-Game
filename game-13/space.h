@@ -26,8 +26,9 @@ struct Vec3 D4(struct Cam4 cam,struct Vec4 pnt);
 void Draw_square2(struct Cam2 cam,struct Vec2 pnt,Uint32 color);
 void Draw_square3(struct Cam3 cam,struct Vec3 pnt,Uint32 color);
 void Draw_cube3(struct Cam3 cam,struct Vec3 pnt,Uint32 color);
-void Draw_wall3(struct Cam3 cam,struct Vec3 pnt[8],Uint32 color);
-void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color);
+void Draw_Wall3(struct Cam3 cam,struct Vec3 pnt[4],struct Texture2 texture);
+void Draw_cuboid3(struct Cam3 cam,struct Vec3 pnt[8],Uint32 color);
+void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],struct Texture3 texture);
 
 //IMPLIMENT
 
@@ -110,7 +111,7 @@ void Draw_cube3(struct Cam3 cam,struct Vec3 pnt,Uint32 color){
   }//*/
 }
 
-void Draw_wall3(struct Cam3 cam,struct Vec3 pnt[8],Uint32 color){
+void Draw_cuboid3(struct Cam3 cam,struct Vec3 pnt[8],Uint32 color){
   int ds[8]={0};
   struct Vec2 points[8];
   struct Vec2 pnts[4];
@@ -134,7 +135,7 @@ void Draw_wall3(struct Cam3 cam,struct Vec3 pnt[8],Uint32 color){
 int test1[]={0,2,4,6};
 int test2[]={7,8,10,11};
 
-void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
+void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],struct Texture3 texture){
 	cam.fwd=Vec4_norm(cam.fwd);
 	cam.rght=Vec4_norm(Vec4_ortho2(cam.rght,cam.fwd));
 	cam.ana=Vec4_norm(Vec4_ortho3(cam.ana,cam.fwd,cam.rght));
@@ -173,6 +174,7 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
 		}
 	}
 	int test=0;
+	struct Vec3 src[12]={0};
 	if(on<8){
 		for(int i=0;i<12;i++){
 			//printf("%f:%f,%f\n",d,r1,r2);
@@ -186,14 +188,30 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
 			}//*/
 
 			if(p[WALL4[i][0]]==1 && p[WALL4[i][1]]==-1 || p[WALL4[i][0]]==-1 && p[WALL4[i][1]]==1){
-				if(nodes<4){
+				if(nodes<4)
 					if(test1[nodes]==i || test2[nodes]==i)
 						test++;
-				}
 				//printf("  %i\n",i);
-				struct Vec4 vec=Vec4_norm(Vec4_subv(pnt[WALL4[i][0]],pnt[WALL4[i][1]]));
+				struct Vec4 vec=Vec4_subv(pnt[WALL4[i][0]],pnt[WALL4[i][1]]);
+				float dist=Vec4_length(vec);
+				vec=Vec4_norm(vec);
 				float T=(d-Vec4_dot(cam.ana,pnt[WALL4[i][0]]))/Vec4_dot(vec,cam.ana);
 				vec=Vec4_addv(pntz[WALL4[i][0]],Vec4_muln(vec,T));
+				T=2*T/dist-1;
+				switch(i){
+					case 0: src[nodes]=Vec3_new(T,-1,-1);
+					case 1: src[nodes]=Vec3_new(1,T,-1);
+					case 2: src[nodes]=Vec3_new(-T,1,-1);
+					case 3: src[nodes]=Vec3_new(-1,-T,-1);
+					case 4: src[nodes]=Vec3_new(-1,-1,T);
+					case 5: src[nodes]=Vec3_new(-1,T,1);
+					case 6: src[nodes]=Vec3_new(-1,1,-T);
+					case 7: src[nodes]=Vec3_new(T,1,1);
+					case 8: src[nodes]=Vec3_new(1,1,-T);
+					case 9: src[nodes]=Vec3_new(1,-T,1);
+					case 10: src[nodes]=Vec3_new(-T,-1,1);
+					case 11: src[nodes]=Vec3_new(1,-1,-T);
+				}
 				pnts[nodes++]=Vec3_new(Vec4_dot(vec,cam.rght),Vec4_dot(vec,up),Vec4_dot(vec,cam.fwd));//*/
 			}
 		}
@@ -217,7 +235,13 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],Uint32 color){
 				Fill_point(pnts2[i],i*63,(int)(50/pnts[j].z));
 			}
 		}
-		Fill_poly(pnts2,0,nodes);
+		if(test==4){
+			struct Vec3 swap=src[0];
+			src[0]=src[1];
+			src[1]=swap;
+		}
+		Render_mappedTexture3(texture,pnts2,src,nodes);
+		//Fill_poly(pnts2,0,nodes);
 	}else{
 		struct Face face[6];
 		int nof;
