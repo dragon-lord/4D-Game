@@ -56,6 +56,7 @@ int Render_init(char *title,int w,int h){
   window=SDL_CreateWindow("Game",
     SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,width,height,SDL_WINDOW_RESIZABLE);
   render=SDL_CreateRenderer(window,-1,SDL_RENDERER_ACCELERATED);
+  width=w*3/4;height=h*3/4;
   screen=SDL_CreateTexture(render,
     SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STATIC,width,height);
   pixels=malloc(width*height*sizeof(Uint32));
@@ -207,8 +208,6 @@ void Render_mappedTexture2(struct Texture2 image,struct Vec2 *poly,struct Vec2 *
     for(i=0;i<nodes;i+=2){
       if(nodeX[i]>=right) break;
       if(nodeX[i+1]<=left) break;
-      if(nodeX[i]<left) nodeX[i]=left;
-      if(nodeX[i+1]>right) nodeX[i+1]=right;
       struct Vec2 sv1=Vec2_subv(src[indeces[i][1]],src[indeces[i][0]]);
       struct Vec2 sv2=Vec2_subv(src[indeces[i+1][1]],src[indeces[i+1][0]]);
       struct Vec2 dv1=Vec2_subv(pnts[indeces[i][1]],pnts[indeces[i][0]]);
@@ -218,11 +217,13 @@ void Render_mappedTexture2(struct Texture2 image,struct Vec2 *poly,struct Vec2 *
       struct Vec2 pnt2=Vec2_addv(Vec2_muln(Vec2_norm(sv2),d2),src[indeces[i+1][0]]);
       struct Vec2 pnt1=Vec2_addv(Vec2_muln(Vec2_norm(sv1),d1),src[indeces[i][0]]);
       struct Vec2 vec=Vec2_divn(Vec2_subv(pnt2,pnt1),nodeX[i+1]-nodeX[i]);
+      if(nodeX[i]<left) nodeX[i]=left;
+      if(nodeX[i+1]>right) nodeX[i+1]=right;
       for(int pixelX=nodeX[i];pixelX<nodeX[i+1];pixelX++){
         if((pixelX>width || pixelX<0 || pixelY>height || pixelY<0)!=1){
           struct Vec2 pnt=Vec2_addv(Vec2_addv(Vec2_muln(Vec2_norm(sv1),d1),src[indeces[i][0]]),Vec2_muln(vec,pixelX-nodeX[i]));
           if(pnt.x>image.w || pnt.x<0 || pnt.y>image.h || pnt.y<0){
-            pixels[width*(height-pixelY)+pixelX]=0;
+            pixels[width*(height-pixelY)+pixelX]=255<<16;
           }else{
             pixels[width*(height-pixelY)+pixelX]=image.pixels[image.w*(image.h-(int)pnt.y)+(int)pnt.x];
           }
@@ -317,8 +318,6 @@ void Render_mappedTexture3(struct Texture3 image,struct Vec2 *poly,struct Vec3 *
     for(i=0;i<nodes;i+=2){
       if(nodeX[i]>=right) break;
       if(nodeX[i+1]<=left) break;
-      if(nodeX[i]<left) nodeX[i]=left;
-      if(nodeX[i+1]>right) nodeX[i+1]=right;
       struct Vec3 sv1=Vec3_subv(src[indeces[i][1]],src[indeces[i][0]]);
       struct Vec3 sv2=Vec3_subv(src[indeces[i+1][1]],src[indeces[i+1][0]]);
       struct Vec2 dv1=Vec2_subv(pnts[indeces[i][1]],pnts[indeces[i][0]]);
@@ -328,14 +327,16 @@ void Render_mappedTexture3(struct Texture3 image,struct Vec2 *poly,struct Vec3 *
       struct Vec3 pnt2=Vec3_addv(Vec3_muln(Vec3_norm(sv2),d2),src[indeces[i+1][0]]);
       struct Vec3 pnt1=Vec3_addv(Vec3_muln(Vec3_norm(sv1),d1),src[indeces[i][0]]);
       struct Vec3 vec=Vec3_divn(Vec3_subv(pnt2,pnt1),nodeX[i+1]-nodeX[i]);
+      if(nodeX[i]<left) nodeX[i]=left;
+      if(nodeX[i+1]>right) nodeX[i+1]=right;
+      int cprev=0;int c=0;
       for(int pixelX=nodeX[i];pixelX<nodeX[i+1];pixelX++){
         if((pixelX>width || pixelX<0 || pixelY>height || pixelY<0)!=1){
           struct Vec3 pnt=Vec3_addv(Vec3_addv(Vec3_muln(Vec3_norm(sv1),d1),src[indeces[i][0]]),Vec3_muln(vec,pixelX-nodeX[i]));
-          if(pnt.x>image.w || pnt.x<0 || pnt.y>image.h || pnt.y<0){
+          if(pnt.x>image.w || pnt.x<0 || pnt.y>image.h || pnt.y<0 || pnt.z>image.d || pnt.z<0){
             pixels[width*(height-pixelY)+pixelX]=255<<16;
           }else{
             pixels[width*(height-pixelY)+pixelX]=image.pixels[image.w*image.h*(int)pnt.z+image.w*(int)pnt.y+(int)pnt.x];
-            //printf("(%i,%i):%i,%i -- (%f,%f,%f)\n",pixelY,pixelX,pixels[width*(height-pixelY)+pixelX],image.pixels[image.w*image.h*(int)pnt.z+image.w*(int)pnt.y+(int)pnt.x],pnt.x,pnt.y,pnt.z);
           }
         }
       }

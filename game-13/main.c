@@ -10,14 +10,18 @@
 
 struct Texture3 test;
 struct Cam4 cam;
+struct Vec3 poly3[4]={{-1,-1,1},{1,-1,1},{1,1,1},{-1,1,1}};
 struct Vec4 poly[8]={{-1,-2,-1,-1},{-1,2,-1,-1},{-1,2,1,-1},{-1,-2,1,-1},{1,-2,1,-1},{1,2,1,-1},{1,2,-1,-1},{1,-2,-1,-1}};
 struct Vec4 poly1[8]={{-1,2,-1,-1},{-1,2,-1,1},{-1,2,1,1},{-1,2,1,1},{1,2,1,1},{1,2,1,-1},{1,2,-1,-1},{1,2,-1,-1}};
 struct Vec4 poly2[8]={{0,-1,-1,-1},{0,1,-1,-1},{0,1,1,-1},{0,-1,1,-1},{0,-1,1,1},{0,1,1,1},{0,1,-1,1},{0,-1,-1,1}};
-int i=0;
 
 void game(float fps){
   //Fill_poly(poly,0,4);
   //printf("%f\n",fps);
+  if(ind>=1)
+    ind=-1;
+  ind+=0.01;
+  //Draw_Wall3(cam,poly3,test);
   Draw_wall4(cam,poly,test);
   //Draw_wall4(cam,poly1,0);
   /*for(int i=0;i<8;i++){
@@ -39,20 +43,27 @@ int main(int argc,char **argv){
 
   Render_init("Game",640,480);
   cam=Cam4_zero();
+  cam.pos=Vec4_new(0,0,0,-2);
 
   test.w=200;
   test.h=200;
   test.d=200;
   test.pixels=malloc((test.d+1)*(test.w+1)*(test.h+1)*sizeof(Uint32));
-  memset(test.pixels,9,(test.d+1)*(test.w+1)*(test.h+1)*sizeof(Uint32));
+  memset(test.pixels,9,(test.d+1)*(test.w+1)*(test.h+1)*sizeof(Uint32));/*/
+  test.pixels=malloc((test.w+1)*(test.h+1)*sizeof(Uint32));
+  memset(test.pixels,255<<16,(test.w+1)*(test.h+1)*sizeof(Uint32));//*/
   for(int i=0;i<=test.w;i++){
     for(int j=0;j<=test.h;j++){
       for(int k=0;k<=test.d;k++){
         int x=i-test.w/2;
         int y=j-test.h/2;
         int z=k-test.d/2;
-        test.pixels[test.w*test.h*k+test.w*j+i]=(int)creal(csqrt(20000-(x*x+y*y+z*z)));
-      }
+        test.pixels[test.w*test.h*k+test.w*j+i]=(int)creal(csqrt(10000-(x*x+y*y+z*z)))*2;
+        //if(test.pixels[test.w*test.h*k+test.w*j+i]!=0)printf("%i\n",test.pixels[test.w*test.h*k+test.w*j+i]);
+      }/*/
+      int x=i-test.w/2;
+      int y=j-test.h/2;
+      test.pixels[test.w*j+i]=(int)creal(csqrt(2000-(x*x+y*y)))*2;//*/
     }
   }
 
