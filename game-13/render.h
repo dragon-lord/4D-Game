@@ -41,6 +41,7 @@ int quit=0;
 int Render_init(char *title,int w,int h);
 struct Texture2 Load_image(char *path);
 void Render_update(void(*update)(float));
+void Render_line(struct Vec2 pnts[],Uint32 color);
 void Render_poly(float pnts[],Uint32 color,int n);
 void Render_mappedTexture2(struct Texture2 image,struct Vec2 *poly,struct Vec2 *source,int n);
 void Render_mappedTexture3(struct Texture3 image,struct Vec2 *poly,struct Vec3 *source,int n);
@@ -79,6 +80,41 @@ void Render_update(void(*update)(float)){
   SDL_Delay(10);
 }
 
+void Render_line(struct Vec2 pnts[],Uint32 color){
+  struct Vec2 pnt0;
+  struct Vec2 pnt1;
+  if(pnts[0].x<pnts[1].x){
+    pnt0=Vec2_new(pnts[0].x*width/2+width/2,pnts[0].y*height/2+height/2);
+    pnt1=Vec2_new(pnts[1].x*width/2+width/2,pnts[1].y*height/2+height/2);
+  }else{
+    pnt0=Vec2_new(pnts[1].x*width/2+width/2,pnts[1].y*height/2+height/2);
+    pnt1=Vec2_new(pnts[0].x*width/2+width/2,pnts[0].y*height/2+height/2);
+  }
+  struct Vec2 vec=Vec2_subv(pnt0,pnt1);
+  if(vec.x==0){
+    if(pnt1.y<pnt0.y){
+      struct Vec2 buff=pnt0;
+      pnt0=pnt1;
+      pnt1=buff;
+    }
+    for(int j=pnt0.y;j<pnt1.y;j++){
+      if(j<height && j>0 && pnt0.x<width && pnt0.x>0)
+      pixels[(height-j)*width+(int)pnt0.x]=color;
+    }
+  }else if(vec.y==0){
+    for(int i=pnt0.x;i<pnt1.x;i++){
+      if(pnt0.y<height && pnt0.y>0 && i<width && i>0)
+      pixels[(height-(int)pnt0.y)*width+i]=color;
+    }
+  }else{
+    for(int i=pnt0.x;i<pnt1.x;i++){
+      int j=pnt0.y+(vec.y/vec.x)*(i-pnt0.x);
+      if(j<height && j>0 && i<width && i>0)
+      pixels[(height-j)*width+i]=color;
+    }
+  }
+}
+
 void Render_poly(float pnts[],Uint32 color,int n){
   pnts[0]=pnts[0]*width/2;
   pnts[1]=pnts[1]*height/2;
@@ -113,7 +149,7 @@ void Render_poly(float pnts[],Uint32 color,int n){
       int j=(int)(height/2-y);
       if(k<=width && j<=height && k>=0 && j>=0)
         pixels[k+j*width]=color;
-      for(int i=1;i<steps && (k>width && x_inc>0 && j>height && y_inc>0 || k<0 && x_inc<0 && j<0 && y_inc<0)==0;i++){
+      for(int i=1;i<steps && ((k>width && x_inc>0 && j>height && y_inc>0) || (k<0 && x_inc<0 && j<0 && y_inc<0))==0;i++){
         x+=x_inc;
         y+=y_inc;
         k=(int)(x+width/2);
@@ -173,8 +209,8 @@ void Render_mappedTexture2(struct Texture2 image,struct Vec2 *poly,struct Vec2 *
     int nodes=0;
     int j=n-1;
     for(i=0;i<n;i++){
-      if(pnts[i].y<(double)pixelY && pnts[j].y>=(double)pixelY
-      ||  pnts[j].y<(double)pixelY && pnts[i].y>=(double)pixelY){
+      if((pnts[i].y<(double)pixelY && pnts[j].y>=(double)pixelY)
+      ||  (pnts[j].y<(double)pixelY && pnts[i].y>=(double)pixelY)){
         nodeX[nodes++]=(int)(pnts[i].x+(pixelY-pnts[i].y)/(pnts[j].y-pnts[i].y)
         *(pnts[j].x-pnts[i].x));
         if(pnts[i].y<pnts[j].y){
@@ -283,8 +319,8 @@ void Render_mappedTexture3(struct Texture3 image,struct Vec2 *poly,struct Vec3 *
     int nodes=0;
     int j=n-1;
     for(i=0;i<n;i++){
-      if(pnts[i].y<(double)pixelY && pnts[j].y>=(double)pixelY
-      ||  pnts[j].y<(double)pixelY && pnts[i].y>=(double)pixelY){
+      if((pnts[i].y<(double)pixelY && pnts[j].y>=(double)pixelY)
+      ||  (pnts[j].y<(double)pixelY && pnts[i].y>=(double)pixelY)){
         nodeX[nodes++]=(int)(pnts[i].x+(pixelY-pnts[i].y)/(pnts[j].y-pnts[i].y)
         *(pnts[j].x-pnts[i].x));
         if(pnts[i].y<pnts[j].y){
@@ -329,7 +365,6 @@ void Render_mappedTexture3(struct Texture3 image,struct Vec2 *poly,struct Vec3 *
       struct Vec3 vec=Vec3_divn(Vec3_subv(pnt2,pnt1),nodeX[i+1]-nodeX[i]);
       if(nodeX[i]<left) nodeX[i]=left;
       if(nodeX[i+1]>right) nodeX[i+1]=right;
-      int cprev=0;int c=0;
       for(int pixelX=nodeX[i];pixelX<nodeX[i+1];pixelX++){
         if((pixelX>width || pixelX<0 || pixelY>height || pixelY<0)!=1){
           struct Vec3 pnt=Vec3_addv(Vec3_addv(Vec3_muln(Vec3_norm(sv1),d1),src[indeces[i][0]]),Vec3_muln(vec,pixelX-nodeX[i]));
@@ -386,8 +421,8 @@ void Fill_poly(struct Vec2 poly[],Uint32 color,int n){
     int nodes=0;
     int j=n-1;
     for(i=0;i<n;i++){
-      if(pnts[i].y<(double)pixelY && pnts[j].y>=(double)pixelY
-      ||  pnts[j].y<(double)pixelY && pnts[i].y>=(double)pixelY){
+      if((pnts[i].y<(double)pixelY && pnts[j].y>=(double)pixelY)
+      ||  (pnts[j].y<(double)pixelY && pnts[i].y>=(double)pixelY)){
         nodeX[nodes++]=(int)(pnts[i].x+(pixelY-pnts[i].y)/(pnts[j].y-pnts[i].y)
         *(pnts[j].x-pnts[i].x));
       }

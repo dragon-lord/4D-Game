@@ -24,6 +24,8 @@ const int WALL4[12][2]={{0,1},{1,2},{2,3},{3,0},{0,7},{7,4},{4,3},{4,5},{5,2},{5
 struct Vec2 D3(struct Cam3 cam,struct Vec3 pnt);
 struct Vec3 D4(struct Cam4 cam,struct Vec4 pnt);
 
+void Draw_cell2(struct Cam2 cam,struct Map2 map);
+void Draw_cell2other(struct Vec2 clip[2],struct Cam2 cam,struct Map2 map,int cell,int wall);
 void Draw_square2(struct Cam2 cam,struct Vec2 pnt,Uint32 color);
 void Draw_square3(struct Cam3 cam,struct Vec3 pnt,Uint32 color);
 void Draw_cube3(struct Cam3 cam,struct Vec3 pnt,Uint32 color);
@@ -40,7 +42,6 @@ struct Vec2 D3(struct Cam3 cam,struct Vec3 pnt){
   cam.fwd=Vec3_norm(cam.fwd);
 	cam.rght=Vec3_norm(cam.rght);
 	pnt=Vec3_norm(Vec3_subv(pnt,cam.pos));
-  float dot=Vec3_dot(pnt,cam.fwd);
 	if(Vec3_dot(pnt,cam.fwd)<0.1){
 		d+=1;
 		pnt=Vec3_addv(Vec3_muln(Vec3_ortho2(pnt,cam.fwd),8),Vec3_divn(cam.fwd,2));/*/Vec3_rot(Vec3_angle(cam.fwd,pnt)-M_PI*2/5,pnt,pnt,cam.fwd,0);//*/
@@ -57,7 +58,6 @@ struct Vec3 D4(struct Cam4 cam,struct Vec4 pnt){
   cam.fwd=Vec4_norm(cam.fwd);
 	cam.rght=Vec4_norm(cam.rght);
 	pnt=Vec4_norm(Vec4_subv(pnt,cam.pos));
-  float dot=Vec4_dot(pnt,cam.fwd);
 	if(Vec4_dot(pnt,cam.fwd)<0.1){
 		d+=1;
 		pnt=Vec4_addv(Vec4_muln(Vec4_ortho2(pnt,cam.fwd),8),Vec4_divn(cam.fwd,2));/*/Vec3_rot(Vec3_angle(cam.fwd,pnt)-M_PI*2/5,pnt,pnt,cam.fwd,0);//*/
@@ -67,12 +67,81 @@ struct Vec3 D4(struct Cam4 cam,struct Vec4 pnt){
 	return Vec3_new(Vec4_dot(pnt,cam.rght),Vec4_dot(pnt,up),Vec4_dot(pnt,cam.fwd));
 }
 
+void Draw_cell2(struct Cam2 cam,struct Map2 map){
+	if(cam.cell>map.size || cam.cell<0)
+		return;
+	struct Vec2 pnts[map.cell[cam.cell].size];
+	int dp[map.cell[cam.cell].size];
+	int dpp[map.cell[cam.cell].size];
+	int dd=0;
+	for(int i=0;i<map.cell[cam.cell].size;i++){
+		pnts[i]=Vec2_subv(map.cell[cam.cell].Wall[i],cam.pos);
+		if(Vec2_dot(cam.fwd,pnts[i])>=0){
+			dp[dd++]=i;
+			dpp[i]=1;
+		}else{
+			dpp[i]=0;
+		}
+	}
+	for(int i=0;i<dd;i++){
+		int l=dp[i]-1;
+		if(dp[i]==0) l=map.cell[cam.cell].size-1;
+		int m=dp[i]+1;
+		if(dp[i]==map.cell[cam.cell].size-1) m=0;
+		if(dpp[m]){
+			if(map.cell[cam.cell].state[dp[i]]){
+				Render_line((struct Vec2[2]){{Vec2_dot(cam.rght,pnts[dp[i]]),Vec2_dot(cam.fwd,pnts[dp[i]])},{Vec2_dot(cam.rght,pnts[m]),Vec2_dot(cam.fwd,pnts[m])}},0);
+			}else{
+				Draw_cell2other((struct Vec2[2]){pnts[dp[i]],pnts[m]},cam,map,map.cell[cam.cell].id[dp[i]],dp[i]);
+			}
+		}else{
+			struct Vec2 vec=Vec2_norm(Vec2_subv(pnts[m],pnts[dp[i]]));
+			float T=(0-Vec2_dot(pnts[dp[i]],cam.fwd))/Vec2_dot(vec,cam.fwd);
+			vec=Vec2_addv(pnts[dp[i]],Vec2_muln(vec,T));
+			if(map.cell[cam.cell].state[dp[i]]){
+				Render_line((struct Vec2[2]){{Vec2_dot(cam.rght,pnts[dp[i]]),Vec2_dot(cam.fwd,pnts[dp[i]])},{Vec2_dot(cam.rght,vec),Vec2_dot(cam.fwd,vec)}},0);
+			}else{
+				Draw_cell2other((struct Vec2[2]){pnts[dp[i]],vec},cam,map,map.cell[cam.cell].id[dp[i]],dp[i]);
+			}
+		}if(!dpp[l]){
+			struct Vec2 vec=Vec2_norm(Vec2_subv(pnts[l],pnts[dp[i]]));
+			float T=(0-Vec2_dot(pnts[dp[i]],cam.fwd))/Vec2_dot(vec,cam.fwd);
+			vec=Vec2_addv(pnts[dp[i]],Vec2_muln(vec,T));
+			if(map.cell[cam.cell].state[l]){
+				Render_line((struct Vec2[2]){{Vec2_dot(cam.rght,pnts[dp[i]]),Vec2_dot(cam.fwd,pnts[dp[i]])},{Vec2_dot(cam.rght,vec),Vec2_dot(cam.fwd,vec)}},0);
+			}else{
+				Draw_cell2other((struct Vec2[2]){pnts[dp[i]],vec},cam,map,map.cell[cam.cell].id[l],l);
+			}
+		}
+	}
+}
+
+void Draw_cell2other(struct Vec2 clip[2],struct Cam2 cam,struct Map2 map,int cell,int wall){
+	if(cell>map.size || cell<0)
+		return;
+	struct Vec2 pnts[map.cell[cell].size];
+	int dp[map.cell[cell].size];
+	int dpp[map.cell[cell].size];
+	int dd=0;
+	struct Vec2 left;
+	struct Vec2 rght;
+	for(int i=0;i<map.cell[cell].size;i++){
+		pnts[i]=Vec2_subv(map.cell[cell].Wall[i],cam.pos);
+		if(Vec2_dot(cam.fwd,pnts[i])>=0){
+			dp[dd++]=i;
+			dpp[i]=1;
+		}else{
+			dpp[i]=0;
+		}
+	}
+}
+
 void Draw_square2(struct Cam2 cam,struct Vec2 pnt,Uint32 color){
   float pnts[8];
   for(int i=0;i<4;i++){
     struct Vec2 vec=POINTS2[i];
     vec=Vec2_divn(Vec2_addv(Vec2_subv(vec,cam.pos),Vec2_muln(pnt,2)),fov);
-    vec=Vec2_new(Vec2_dot(vec,cam.rght),Vec2_dot(vec,cam.up));
+    vec=Vec2_new(Vec2_dot(vec,cam.rght),Vec2_dot(vec,cam.fwd));
     pnts[i*2]=vec.x;
     pnts[i*2+1]=vec.y;
   }
@@ -81,14 +150,104 @@ void Draw_square2(struct Cam2 cam,struct Vec2 pnt,Uint32 color){
 
 void Draw_square3(struct Cam3 cam,struct Vec3 pnt,Uint32 color){
 	int points[4]={0,1,3,2};
-	struct Vec2 pnts[4];
+	struct Vec2 pnts[5];
+	struct Vec3 pnt3[4];
+	float dot[4];
 	d=0;
 	for(int i=0;i<4;i++){
-		struct Vec2 vec=D3(cam,Vec3_addv(POINTS3[points[i]],pnt));
-		pnts[i]=vec;
+		pnt3[i]=Vec3_subv(Vec3_addv(POINTS3[points[i]],pnt),cam.pos);
+		dot[i]=Vec3_dot(cam.fwd,pnt3[i]);
+		if(dot[i]<1){
+			d++;
+		}
+		printf("%i,%f\n",i,dot[i]);
 	}
-	if(d!=4)
-  	Fill_poly(pnts,color,4);
+	printf("  %i\n",d);
+	if(d!=4){
+		struct Vec3 up=Vec3_ortho2(cam.up,cam.fwd);
+		struct Vec3 vec;
+		float T;
+		int t=0;
+		int f=0;
+		for(int i=0;i<4;i++){
+			if(dot[i]<.1 && f<2){
+				int l=i-1;
+				if(i==0) l=3;
+				int m=i+1;
+				if(i==3) m=0;
+				if(d==1){
+					vec=Vec3_subv(pnt3[l],pnt3[i]);
+					T=(.1-Vec3_dot(pnt3[i],cam.fwd))/Vec3_dot(vec,cam.fwd);
+					vec=Vec3_addv(pnt3[i],Vec3_muln(vec,T));
+					printf(" %i,%f\n",i,Vec3_dot(vec,cam.fwd));
+					vec=Vec3_subv(Vec3_divn(vec,Vec3_dot(vec,cam.fwd)),cam.fwd);
+					pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+					f++;
+					t++;
+					vec=Vec3_subv(pnt3[m],pnt3[i]);
+					T=(.1-Vec3_dot(pnt3[i],cam.fwd))/Vec3_dot(vec,cam.fwd);
+					vec=Vec3_addv(pnt3[i],Vec3_muln(vec,T));
+					printf(" %i,%f\n",i+1,Vec3_dot(vec,cam.fwd));
+					vec=Vec3_subv(Vec3_divn(vec,Vec3_dot(vec,cam.fwd)),cam.fwd);
+					pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+					t++;
+					f++;
+				}else if(d==2){
+					if(dot[l]<.1){
+						vec=Vec3_subv(pnt3[m],pnt3[i]);
+						T=(.1-Vec3_dot(pnt3[i],cam.fwd))/Vec3_dot(vec,cam.fwd);
+						printf("--%f:(%f,%f,%f),(%f,%f,%f)\n",Vec3_dot(vec,cam.fwd),vec.x,vec.y,vec.z,cam.fwd.x,cam.fwd.y,cam.fwd.z);
+						vec=Vec3_addv(pnt3[i],Vec3_muln(vec,T));
+						printf(" %i,%f	%f\n",i,Vec3_dot(vec,cam.fwd),T);
+						vec=Vec3_subv(Vec3_divn(vec,Vec3_dot(vec,cam.fwd)),cam.fwd);
+						pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+						t++;
+						f++;
+					}else{
+						vec=Vec3_subv(pnt3[l],pnt3[i]);
+						T=(.1-Vec3_dot(pnt3[i],cam.fwd))/Vec3_dot(vec,cam.fwd);
+						printf("--%f:(%f,%f,%f),(%f,%f,%f)\n",Vec3_dot(vec,cam.fwd),vec.x,vec.y,vec.z,cam.fwd.x,cam.fwd.y,cam.fwd.z);
+						vec=Vec3_addv(pnt3[i],Vec3_muln(vec,T));
+						printf(" %i,%f	%f\n",i,Vec3_dot(vec,cam.fwd),T);
+						vec=Vec3_subv(Vec3_divn(vec,Vec3_dot(vec,cam.fwd)),cam.fwd);
+						pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+						t++;
+						f++;
+					}
+				}else if(d==3){
+					vec=Vec3_subv(pnt3[l],pnt3[i]);
+					T=(.1-Vec3_dot(pnt3[i],cam.fwd))/Vec3_dot(vec,cam.fwd);
+					vec=Vec3_addv(pnt3[i],Vec3_muln(vec,T));
+					printf(" %i,%i,%f\n",t,i,Vec3_dot(vec,cam.fwd));
+					vec=Vec3_subv(Vec3_divn(vec,Vec3_dot(vec,cam.fwd)),cam.fwd);
+					pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+					f++;
+					t++;
+					vec=Vec3_subv(pnt3[m],pnt3[i]);
+					T=(.1-Vec3_dot(pnt3[i],cam.fwd))/Vec3_dot(vec,cam.fwd);
+					vec=Vec3_addv(pnt3[i],Vec3_muln(vec,T));
+					printf(" %i,%i,%f\n",t,i+1,Vec3_dot(vec,cam.fwd));
+					vec=Vec3_subv(Vec3_divn(vec,Vec3_dot(vec,cam.fwd)),cam.fwd);
+					pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+					t++;
+					f++;
+				}
+			}else if(dot[i]>=.1){
+				vec=Vec3_subv(Vec3_divn(pnt3[i],dot[i]),cam.fwd);
+				printf(" %i,%f\n",t,Vec3_dot(vec,cam.fwd));
+				pnts[t]=Vec2_new(Vec3_dot(vec,cam.rght),Vec3_dot(vec,cam.up));
+				t++;
+			}
+			if(d==3 && t>2)
+				i=4;
+		}
+		if(d==0 || d==2)
+			Fill_poly(pnts,color,4);
+		else if(d==1)
+			Fill_poly(pnts,color,5);
+		else if(d==3)
+			Fill_poly(pnts,color,3);
+	}
 }
 
 void Draw_cube3(struct Cam3 cam,struct Vec3 pnt,Uint32 color){
@@ -200,7 +359,7 @@ void Draw_wall4(struct Cam4 cam,struct Vec4 pnt[8],struct Texture3 texture){
 				Fill_point(D3(Cam3_zero(),vec3),100<<8,50/vec3.z);
 			}//*/
 
-			if(p[WALL4[i][0]]==1 && p[WALL4[i][1]]==-1 || p[WALL4[i][0]]==-1 && p[WALL4[i][1]]==1){
+			if((p[WALL4[i][0]]==1 && p[WALL4[i][1]]==-1) || (p[WALL4[i][0]]==-1 && p[WALL4[i][1]]==1)){
 				if(nodes<4)
 					if(test1[nodes]==i || test2[nodes]==i)
 						test++;
