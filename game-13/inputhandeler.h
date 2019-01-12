@@ -22,9 +22,11 @@ void Input_update(){
     if(e.type==SDL_QUIT){
       quit=1;
     }else if(e.type==SDL_KEYDOWN){
-      key[e.key.keysym.sym]=1;
+      if(e.key.keysym.sym<=256)
+        key[e.key.keysym.sym]=1;
     }else if(e.type==SDL_KEYUP){
-      key[e.key.keysym.sym]=0;
+      if(e.key.keysym.sym<=256)
+        key[e.key.keysym.sym]=0;
     }else if(e.type==SDL_MOUSEBUTTONDOWN){
       mouse[e.button.button]=1;
     }else if(e.type==SDL_MOUSEBUTTONUP){

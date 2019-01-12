@@ -8,7 +8,7 @@
 #include "space.h"
 #include "object.h"
 
-struct Texture3 test;
+//struct Texture3 test;
 struct Map2 map;
 struct Cam2 cam;
 struct Vec2 line[2]={{0,0},{0,0.1}};
@@ -69,7 +69,7 @@ int main(int argc,char **argv){
     //quit=1;
   }
 
-  free(test.pixels);
+  //free(test.pixels);
   Map2_free(map);
 
   Render_destroy();

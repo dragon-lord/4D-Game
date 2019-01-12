@@ -97,9 +97,9 @@ void Cam2_update(struct Cam2 *cam,struct Map2 map){
     cam->pos=Vec2_addv(cam->pos,Vec2_divn(cam->rght,50));
   }if(key['a']==1){
     cam->pos=Vec2_subv(cam->pos,Vec2_divn(cam->rght,50));
-  }if(key[79]==1){
+  }if(key['l']==1){
     cam->fwd=Vec2_rot(-0.05,cam->fwd);
-  }if(key[80]==1){
+  }if(key['j']==1){
     cam->fwd=Vec2_rot(0.05,cam->fwd);
   }/*if(key[81]==1){
 

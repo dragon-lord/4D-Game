@@ -101,7 +101,7 @@ void Draw_cell2(struct Cam2 cam,struct Map2 map){
 			if(map.cell[cam.cell].state[dp[i]]){
 				Render_line((struct Vec2[2]){{Vec2_dot(cam.rght,pnts[dp[i]]),Vec2_dot(cam.fwd,pnts[dp[i]])},{Vec2_dot(cam.rght,vec),Vec2_dot(cam.fwd,vec)}},0);
 			}else{
-				Draw_cell2other((struct Vec2[2]){pnts[dp[i]],vec},cam,map,map.cell[cam.cell].id[dp[i]],dp[i]);
+				//Draw_cell2other((struct Vec2[2]){pnts[dp[i]],vec},cam,map,map.cell[cam.cell].id[dp[i]],dp[i]);
 			}
 		}if(!dpp[l]){
 			struct Vec2 vec=Vec2_norm(Vec2_subv(pnts[l],pnts[dp[i]]));
